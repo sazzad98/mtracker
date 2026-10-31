@@ -60,15 +60,65 @@
   .msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
   .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px}
   .toolbar input{flex:1}
-  .tablebox{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:70vh}
-  table{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content}
-  th,td{padding:10px 14px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
-  thead th{position:sticky;top:0;background:var(--head);color:var(--head-ink);font-weight:600;z-index:2}
-  th:first-child,td:first-child{position:sticky;left:0;text-align:left;z-index:1;font-weight:600;
-    background:var(--card);border-right:1px solid var(--line)}
-  thead th:first-child{z-index:3;background:var(--head)}
-  tbody tr:nth-child(even) td{background:var(--zebra)}
-  tbody tr:nth-child(even) td:first-child{background:var(--zebra)}
+  
+  /* টেবিল স্ক্রোলিং এবং ফ্রিজিং সেটিংস */
+  .tablebox{
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    max-height: 70vh;
+    position: relative;
+  }
+  table{
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    min-width: max-content;
+  }
+  th, td{
+    padding: 10px 14px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    white-space: nowrap;
+    background: var(--card);
+  }
+  th:last-child, td:last-child{
+    border-right: none;
+  }
+  /* হেডার স্টিকি (উপরে স্থির থাকবে) */
+  thead th{
+    position: sticky;
+    top: 0;
+    background: var(--head) !important;
+    color: var(--head-ink);
+    font-weight: 600;
+    z-index: 2;
+    border-bottom: 2px solid var(--line);
+  }
+  /* নেম কলাম ফ্রিজ (বামে স্থির থাকবে) */
+  th:first-child, td:first-child{
+    position: sticky;
+    left: 0;
+    text-align: left;
+    z-index: 1;
+    font-weight: 600;
+    background: var(--card);
+    border-right: 2px solid var(--line);
+  }
+  /* কর্নার সেল (Name হেডার) সবার উপরে ফিক্সড থাকবে */
+  thead th:first-child{
+    z-index: 3;
+    background: var(--head) !important;
+  }
+  /* জিব্রা স্ট্রাইপেও কালার ঠিক রাখার জন্য */
+  tbody tr:nth-child(even) td{
+    background: var(--zebra);
+  }
+  tbody tr:nth-child(even) td:first-child{
+    background: var(--zebra);
+  }
+
   td.empty{color:var(--muted)}
   .state{padding:28px;text-align:center;color:var(--muted)}
   @media (prefers-reduced-motion:no-preference){ button{transition:opacity .15s} }
@@ -124,14 +174,13 @@
 
   const $ = id => document.getElementById(id);
 
-  // Safe localStorage helpers (storage can be blocked in some browsers)
+  // Safe localStorage helpers
   const store = {
     get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
     set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} },
     del(k){ try{ localStorage.removeItem(k); }catch(e){} }
   };
 
-  // Saved name: shown at the top with a verified badge, name field hidden
   function applyName(){
     const s = store.get(KEY_NAME);
     $("who").hidden = !s;
@@ -141,7 +190,6 @@
   }
   applyName();
 
-  // Cooldown: after one submit the button stays disabled for 30 minutes (no timer shown)
   let cdTimer = null;
   function remaining(){
     const last = Number(store.get(KEY_LAST) || 0);
@@ -158,7 +206,6 @@
   tickCooldown();
   let DATA = { headers: [], rows: [] };
 
-  // Hidden date = today (local time), format yyyy-MM-dd
   function today(){
     const d = new Date();
     const p = n => String(n).padStart(2, "0");
@@ -220,7 +267,7 @@
     try{
       const res = await fetch(API_URL, {
         method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, // avoids CORS preflight
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ name: name, marks: $("marks").value, date: $("date").value })
       });
       const j = await res.json();
