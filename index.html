@@ -117,6 +117,9 @@
   tbody tr:nth-child(even) td:first-child{background:var(--zebra)}
 
   td.empty{color:var(--muted)}
+  /* Less than 35 = yellow, less than 30 = red */
+  tbody tr:nth-child(n) td.low35{background:#facc15;color:#1f2937;font-weight:600}
+  tbody tr:nth-child(n) td.low30{background:#dc2626;color:#ffffff;font-weight:600}
   .state{padding:28px;text-align:center;color:var(--muted)}
   @media (prefers-reduced-motion:no-preference){ button{transition:opacity .15s} }
 </style>
@@ -213,6 +216,15 @@
     return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
 
+  function cellClass(v){
+    if (v === "" || v === null || v === undefined) return "";
+    const n = Number(v);
+    if (isNaN(n)) return "";
+    if (n < 30) return "low30";
+    if (n < 35) return "low35";
+    return "";
+  }
+
   function render(){
     const q = $("q").value.trim().toLowerCase();
     const { headers, rows } = DATA;
@@ -234,8 +246,10 @@
       "<table><thead><tr>" + headers.map(h => "<th>" + esc(h) + "</th>").join("") + "</tr></thead><tbody>" +
       list.map(r => "<tr>" + headers.map((_, i) => {
         const v = r[i] === undefined ? "" : r[i];
-        return i === 0 ? "<td>" + esc(v) + "</td>"
-                       : v === "" ? '<td class="empty">–</td>' : "<td>" + esc(v) + "</td>";
+        if (i === 0) return "<td>" + esc(v) + "</td>";
+        if (v === "") return '<td class="empty">–</td>';
+        const c = cellClass(v);
+        return "<td" + (c ? ' class="' + c + '"' : "") + ">" + esc(v) + "</td>";
       }).join("") + "</tr>").join("") + "</tbody></table>";
   }
 
