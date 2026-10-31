@@ -21,7 +21,7 @@
     }
   }
   *{box-sizing:border-box}
-  html,body{margin:0}
+  html,body{margin:0;overflow-x:hidden}
   body{
     font-family:"Hind Siliguri",system-ui,-apple-system,"Segoe UI",sans-serif;
     background:var(--bg); color:var(--ink); min-height:100vh;
@@ -30,8 +30,12 @@
   .wrap{max-width:1180px;margin:0 auto}
   h1{font-size:1.9rem;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
   .sub{color:var(--muted);margin:0 0 22px}
-  .grid{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}
-  @media (max-width:860px){.grid{grid-template-columns:1fr}}
+
+  /* minmax(0,1fr) + min-width:0 => wide table can't stretch the page */
+  .grid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:20px;align-items:start}
+  .grid > *{min-width:0}
+  @media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
   .card h2{font-size:1.1rem;margin:0 0 14px;font-weight:600}
   label{display:block;font-weight:500;margin:0 0 6px;font-size:.95rem}
@@ -60,64 +64,57 @@
   .msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
   .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px}
   .toolbar input{flex:1}
-  
-  /* টেবিল স্ক্রোলিং এবং ফ্রিজিং সেটিংস */
+
+  /* Only this box scrolls left-right; page itself never does */
   .tablebox{
-    overflow: auto;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    max-height: 70vh;
-    position: relative;
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    border:1px solid var(--line);
+    border-radius:10px;
   }
+  #out{width:max-content;min-width:100%}
+  #out.state{width:auto}
+
   table{
-    border-collapse: separate;
-    border-spacing: 0;
-    width: 100%;
-    min-width: max-content;
+    border-collapse:separate;
+    border-spacing:0;
+    width:100%;
+    min-width:max-content;
   }
   th, td{
-    padding: 10px 14px;
-    text-align: center;
-    border-bottom: 1px solid var(--line);
-    border-right: 1px solid var(--line);
-    white-space: nowrap;
-    background: var(--card);
+    padding:10px 14px;
+    text-align:center;
+    border-bottom:1px solid var(--line);
+    border-right:1px solid var(--line);
+    white-space:nowrap;
+    background:var(--card);
   }
-  th:last-child, td:last-child{
-    border-right: none;
-  }
-  /* হেডার স্টিকি (উপরে স্থির থাকবে) */
+  th:last-child, td:last-child{border-right:none}
   thead th{
-    position: sticky;
-    top: 0;
-    background: var(--head) !important;
-    color: var(--head-ink);
-    font-weight: 600;
-    z-index: 2;
-    border-bottom: 2px solid var(--line);
+    background:var(--head) !important;
+    color:var(--head-ink);
+    font-weight:600;
+    border-bottom:2px solid var(--line);
   }
-  /* নেম কলাম ফ্রিজ (বামে স্থির থাকবে) */
+  /* First (Name) column stays frozen on the left */
   th:first-child, td:first-child{
-    position: sticky;
-    left: 0;
-    text-align: left;
-    z-index: 1;
-    font-weight: 600;
-    background: var(--card);
-    border-right: 2px solid var(--line);
+    position:sticky;
+    left:0;
+    text-align:left;
+    z-index:2;
+    font-weight:600;
+    background:var(--card);
+    border-right:2px solid var(--line);
   }
-  /* কর্নার সেল (Name হেডার) সবার উপরে ফিক্সড থাকবে */
   thead th:first-child{
-    z-index: 3;
-    background: var(--head) !important;
+    z-index:3;
+    background:var(--head) !important;
   }
-  /* জিব্রা স্ট্রাইপেও কালার ঠিক রাখার জন্য */
-  tbody tr:nth-child(even) td{
-    background: var(--zebra);
-  }
-  tbody tr:nth-child(even) td:first-child{
-    background: var(--zebra);
-  }
+  tbody tr:nth-child(even) td{background:var(--zebra)}
+  tbody tr:nth-child(even) td:first-child{background:var(--zebra)}
 
   td.empty{color:var(--muted)}
   .state{padding:28px;text-align:center;color:var(--muted)}
@@ -174,7 +171,6 @@
 
   const $ = id => document.getElementById(id);
 
-  // Safe localStorage helpers
   const store = {
     get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
     set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} },
